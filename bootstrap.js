@@ -41,7 +41,7 @@ const bootstrap=(app,express)=>{
         if(req.originalUrl=='/order/webhook'){
             return next();
         }else{
-            express.json()(req.res.next)
+            express.json()(req,res,next)
         }
     })
 
