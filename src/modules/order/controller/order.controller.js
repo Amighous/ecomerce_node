@@ -1,3 +1,4 @@
+import Stripe from 'stripe'
 import cartModel from '../../../DB/models/cart.model.js'
 import couponModel from '../../../DB/models/coupon.model.js'
 import orderModel from '../../../DB/models/order.model.js'
@@ -198,4 +199,28 @@ export const allUserOrders= async (req,res,next)=>{
 
     const allUserOrders = await orderModel.find({ userId:req.user._id })
     return res.status(200).json({message:'done',allUserOrders})
+}
+ 
+
+export const webHook=async(req, res,next) => {
+    const stripe = new Stripe(process.env.PAYMENT_KEY) 
+    const endpointSecret =process.env.END_POINT_SECRET;
+
+const sig = request.headers['stripe-signature'];
+
+let event;
+
+try {
+  event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+} catch (err) {
+  response.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+// Handle the event
+if (event.type=='checkout.session.completed') {
+    let orderId=event.data.object.metadata.orderId
+    const updateOrder = await orderModel.updateOne({_id:orderId},{status:'placed'})
+    return res.json({message:"done"})
+}
+return next(new Error('failed to payment',{cause:500}))
 }

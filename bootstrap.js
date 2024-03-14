@@ -37,7 +37,13 @@ const bootstrap=(app,express)=>{
     // }
     // }
 
-    app.use(express.json())
+    app.use((req,res,next)=>{
+        if(req.originalUrl=='/order/webhook'){
+            return next();
+        }else{
+            express.json()(req.res.next)
+        }
+    })
 
     app.use('/cart',  cartRouter)
     app.use('/user', userRouter)

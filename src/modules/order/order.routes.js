@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express,{ Router } from "express";
 import * as orderController from './controller/order.controller.js'
 import { asyncHandler } from "../../utils/errorHandling.js";
 import * as orderValidation from './order.validation.js'
@@ -47,4 +47,10 @@ router.post('/',
             asyncHandler(orderController.allUserOrders))
 
      
+ 
+
+            
+router.post('/webhook', express.raw({type: 'application/json'}), asyncHandler(orderController.webHook));
+
+ 
 export default router
