@@ -81,7 +81,7 @@ export const createOrder= async (req,res,next)=>{
      if (order.paymentType == "card") {
     let createCoupon;
     if (couponName) {
-      createCoupon = await stripe.coupons.create({
+      createCoupon = await Stripe.coupons.create({
         percent_off: amount,
         duration: "once",
       });
