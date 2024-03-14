@@ -1,8 +1,9 @@
-import { customAlphabet } from "nanoid"
+import { customAlphabet, nanoid } from "nanoid"
 import userModel from "../../../DB/models/user.model.js"
 import { generateToken, verfiyToken } from "../../../utils/GenerateAndVerfiyToken.js"
 import sendEmail from "../../../utils/email.js"
 import { hash, verfiy } from "../../../utils/hashing.js"
+import {OAuth2Client} from 'google-auth-library'
 
 
 export const signUp=  async (req,res,next)=>{
@@ -85,15 +86,19 @@ export const refreshEmail=async (req,res,next)=>{
 export const logIn=async (req,res,next)=>{
     const {email,password}=req.body
     const user = await userModel.findOne({email})
+ 
     if(!user){
         return  next(new Error('email or password not valid',{cause:404}))
     }
- 
+    if(user.provider=="Google"){
+        return  next(new Error('please login with google button',{cause:404}))
+
+    }
     if(!user.confirmEmail){
         return next(new Error('please confirm your email',{cause:400}))
 
     }
-const match =verfiy({plainText:password,hashValue:user.password})
+    const match =verfiy({plainText:password,hashValue:user.password})
     if(!match){
         return  next(new Error('email or password not valid',{cause:404}))
 
@@ -145,3 +150,62 @@ export const forgetPassword = async (req,res,next)=>{
     return res.status(200).json({message:'done',updateUser})
 
 }
+
+export const loginWithGmail=async (req,res,next)=>{
+    const client = new OAuth2Client();
+    async function verify() {
+        const {idToken}=req.body
+    const ticket = await client.verifyIdToken({
+        idToken ,
+        audience: process.env.CLIENT_ID,   
+    });
+    const payload = ticket.getPayload();
+    return payload 
+    }
+    const  {name,picture,email,email_verified}=await verify()
+    
+    const user = await userModel.findOne({email})
+   
+    //signup
+    if(!user){
+        const newUser=await userModel.create({
+            userName:name,
+            email,
+            confirmEmail:email_verified,
+            image:{
+                secure_url:picture
+            },
+            password:nanoid(6),
+            status:'online',
+            provider:"Google"
+
+        })
+        const token = generateToken({
+            payload:{email,_id:newUser._id,role:user.role,iniateAt:Date.now()},
+                expiresIn:60*30
+        })
+        const refreshToken = generateToken({
+             payload:{email,_id:newUser._id,role:user.role,iniateAt:Date.now()},
+             expiresIn:60*60*30*24
+        })
+        return res.status(201).json({message:"done",token,refreshToken})
+
+    }
+
+//login
+    if(user.provider=='Google'){
+        const token = generateToken({
+            payload:{email,_id:user._id,role:user.role,iniateAt:Date.now()},
+                expiresIn:60*30
+            })
+        const refreshToken = generateToken({
+             payload:{email,_id:user._id,role:user.role,iniateAt:Date.now()},
+             expiresIn:60*60*30*24
+            })
+        user.status="online"
+        await user.save()
+    return res.status(200).json({message:"done",token,refreshToken})
+    }
+
+    return next(new Error('invalid provider system login with gmail'))
+ }

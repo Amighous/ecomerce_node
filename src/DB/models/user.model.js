@@ -50,10 +50,15 @@ passwordChangedAt:{
     default: Date.now,
 },
 phoneNumber:String,
-image:String,
+image:Object,
 address:String,
 DOB:String,
-code:String
+code:String,
+provider:{
+    type:String,
+    enum:['System','Google'],
+    default:'System'
+}
 },
 {timestamps:true}
 )

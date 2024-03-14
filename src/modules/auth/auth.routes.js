@@ -27,6 +27,6 @@ router.post('/signUp',
     .put('/forgetPassword',     
             validation(authValidation.forgetPasswordSchema),
             asyncHandler(authController.forgetPassword))
-
+    .post('/loginWithGmail',authController.loginWithGmail)
    
 export default router

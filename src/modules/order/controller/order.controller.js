@@ -206,21 +206,21 @@ export const webHook=async(req, res,next) => {
     const stripe = new Stripe(process.env.PAYMENT_KEY) 
     const endpointSecret =process.env.END_POINT_SECRET;
 
-const sig = req.headers['stripe-signature'];
+    const sig = req.headers['stripe-signature'];
 
-let event;
+    let event;
 
-try {
-  event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-} catch (err) {
-  response.status(400).send(`Webhook Error: ${err.message}`);
-  }
+    try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    } catch (err) {
+    response.status(400).send(`Webhook Error: ${err.message}`);
+    }
 
-// Handle the event
-if (event.type=='checkout.session.completed') {
-    let orderId=event.data.object.metadata.orderId
-    const updateOrder = await orderModel.updateOne({_id:orderId},{status:'placed'})
-    return res.json({message:"done"})
-}
-return next(new Error('failed to payment',{cause:500}))
+    // Handle the event
+    if (event.type=='checkout.session.completed') {
+        let orderId=event.data.object.metadata.orderId
+        const updateOrder = await orderModel.updateOne({_id:orderId},{status:'placed'})
+        return res.json({message:"done"})
+    }
+    return next(new Error('failed to payment',{cause:500}))
 }
