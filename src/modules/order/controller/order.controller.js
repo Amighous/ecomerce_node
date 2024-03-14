@@ -78,7 +78,6 @@ export const createOrder= async (req,res,next)=>{
     }
     const order = await orderModel.create(req.body)
      if (order.paymentType == "card") {
-    const stripe = new Stripe(process.env.API_KEY_PAYMENT);
     let createCoupon;
     if (couponName) {
       createCoupon = await stripe.coupons.create({
