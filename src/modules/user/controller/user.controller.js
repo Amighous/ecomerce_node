@@ -6,7 +6,7 @@ import { hash, verfiy } from "../../../utils/hashing.js";
 
 export const updateUser = async(req,res,next)=>{
   const { _id } = req.user
-  const { email , phoneNumber , recoveryEmail  , userName , DOB} = req.body;
+  const { email , phoneNumber   , userName , DOB} = req.body;
   const user = await userModel.findOne({email})
 
   //check if email exist
@@ -25,7 +25,7 @@ export const updateUser = async(req,res,next)=>{
 ///////////delete//////////
 export const deleteUser = async(req,res,next)=>{
   const { _id } = req.user
-  const userDelete = await userModel.updateOne( {_id} ,{isDeleted:true})
+   await userModel.updateOne( {_id} ,{isDeleted:true})
   
     return res.json({ message: 'User deleted successfully' })
 }
